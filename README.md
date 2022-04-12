@@ -10,4 +10,5 @@ Circuit Modeling of Lithium-Ion batteries for a real-time battery management sys
 
 Folders
 • ECM_EXT: Designed Extraction Algorithms scripts
-• Error Model: EIS Measurement Model with function and analysis scripts
+• Error_Model: EIS Measurement Model with function and analysis scripts
+• Voltage-Profile-Predictions: Resulting Model S voltage predictions with extracted ECM parameters from EIS data
