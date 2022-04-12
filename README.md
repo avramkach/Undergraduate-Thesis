@@ -6,7 +6,7 @@ Circuit Modeling of Lithium-Ion batteries for a real-time battery management sys
 • Implemented linear Kramer Kronig technique in python to validate EIS measurements
 • Designed ECM extraction algorithms that are goings towards a publication
 • Made an error model that captures the systems data collection with signal processing
-• Using Battery Discharge Dirving profile model is Simulink with Tesla Model S Battery Module EIS and current cycle profile data to analyze voltage predictions from ECM extracted parameters
+• Used Battery Discharge Driving profile model in Simulink with Tesla Model S Battery Module EIS and current cycle profile data to analyze voltage predictions from ECM extracted parameters
 
 Folders
 • ECM_EXT: Designed Extraction Algorithms scripts
