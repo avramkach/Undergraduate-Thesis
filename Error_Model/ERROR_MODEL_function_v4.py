@@ -133,7 +133,8 @@ def ERROR_MODEL_v4(f, Zre, Zim, SNR, td):
         
         #Current I(t)
         Ishift = 0
-        x = sin_wave(fi, tI, Ishift)
+        IV = 10 #10Apeak
+        x = sin_wave(fi, tI, Ishift, 10)
         
         #Voltage V(t)
         #V|<V = Io/root(2)<I * |Z|<Z = Io/root(2)|Z|<I+Z
@@ -141,7 +142,8 @@ def ERROR_MODEL_v4(f, Zre, Zim, SNR, td):
         #V(t) = |Z|sin(wt + <Z) #assuming Io = 1, <I = 0
         Vshift = 0 #might use this as a variable to test error -> good simple test
         #adding +shift will cause ECM not to work because it filters out Zim>0 -> need to make robust
-        y = sin_wave(fi, tV, np.angle(Z[i]) + Ishift + Vshift, np.abs(Z[i]))
+        AV = np.abs(Z[i]*IV) #Amplitude |V| = |IZ| = 
+        y = sin_wave(fi, tV, np.angle(Z[i]) + Ishift + Vshift, AV)
         
         #Impedance Z(fi) = V(fi)/I(fi), no noise
         Zout[i] = fi_FFT(y, fi, fs, N)/fi_FFT(x, fi, fs, N)
@@ -151,19 +153,42 @@ def ERROR_MODEL_v4(f, Zre, Zim, SNR, td):
             #outputs Zout
             Zoutn[i] = Zout[i]
         else:
-            #Noise with ENOB -> 
+            #Noise with ENOB
             
             #Current In(t)
-            xn = awgn(x, SNR)
+            xn1 = awgn(x, SNR)
             
-            #use measured here
+            #Measured ADC Current In(t)
+            xn = measured(xn1, SNR, IV, Z[i], "I")
             
             #Voltage Vn(t)
-            yn = awgn(y, SNR)
+            yn1 = awgn(y, SNR)
+            
+            #Measured ADC Voltage Vn(t)
+            yn = measured(yn1, SNR, AV, Z[i], "V")
+            
+            '''if i == 10:
+                plt.figure(100)
+                plt.plot(tI, xn1, label = "Signal")
+                plt.plot(tI, xn, label = "Measured Signal")
+                plt.xlabel("time (s)")
+                plt.ylabel("I (A)")
+                plt.title("Current System Sampling, SNR = "+str(SNR)+"dB, f = " + str(fi) + "Hz")
+                plt.xlim([0,0.02])
+                plt.legend()
+                
+                plt.figure(101)
+                plt.plot(tI, yn1)
+                plt.plot(tI, yn, label = "meas")
+                plt.xlim([0,0.02])
+                plt.title("Voltage System Sampling, SNR = "+str(SNR)+"dB, f = " + str(fi) + "Hz")
+                plt.legend()'''
             
             #Impedance Zn(fi) = Vn(fi)/In(fi), with noise
             Zoutn[i] = fi_FFT(yn, fi, fs, N)/fi_FFT(xn, fi, fs, N)
-            
+    
+    #round to 15 decimals 32 bit -> 10 decimals (digits)
+    Zoutn = np.round(Zoutn, 10)
     return Zoutn
     
 #sinusoidal generator
@@ -181,8 +206,8 @@ def fi_FFT(x, fi, fs, N): #signal, signal freq, sampling freq, number of samples
     n = np.argmin(np.abs(fbins-fi))
     return P1[n]
 
-#Measured function: 
-def measured(s, A, SNRdB):
+#Measured function: s = signal, SNRdB = given SNRdB, A = Amplitude
+def measured(s, SNRdB, A, Z, sig):
     #computes ENOB and LSB based using equation in ADS1675
     #Same SNRdB for voltage and current measurements
     
@@ -212,14 +237,18 @@ def measured(s, A, SNRdB):
         #take all sample that give values less than ENOB
         if np.floor(np.abs(sample/LSB)) == 0:
             Smeas[i] = 0
-        #case if it goes above or equal to reference 3V/-3V
-        elif np.abs(sample) >= 3:
-            Smeas[i] = (3 - LSB)*np.sign(sample)
-        #case if its within 3V/-3V range
         else:
             Smeas[i] = ((np.floor(np.abs(sample)/LSB))*LSB)*np.sign(sample)
+        #case if it goes above or equal to reference 3V/-3V
+        '''elif sig == "V" and np.abs(sample) >= 3:
+            Smeas[i] = (3 - LSB)*np.sign(sample)
+        #case if its within (3V/-3V)/Z current range
+        elif sig == "C" and np.abs(sample) >= 3/np.abs(Z):
+            Smeas[i] = (3/np.abs(Z) - LSB)*np.sign(sample)'''
+        
     
-    #include gain....
+    #round to 15 decimals 32 bit -> 10 decimals (digits)
+    Smeas = np.round(Smeas, 10)
     
     return Smeas
     
