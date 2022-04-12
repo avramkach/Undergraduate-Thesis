@@ -29,10 +29,6 @@ import math
 
 
 def ECM_EXT_v3(f, Zre, Zim):
-    #round to 15 decimals 32 bit -> 10 decimals (digits)
-    Zim = np.round(Zim, 15)
-    Zre = np.round(Zre, 15)
-    
     print('-----------' + 'ECM_EXT_v3' + '-----------')
      
     #Output Impedance from ECM
